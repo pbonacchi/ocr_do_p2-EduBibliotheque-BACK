@@ -24,6 +24,10 @@ logging:
       openclassrooms:
         etudiant: info
 
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: 3600000
+
 management:
   endpoints:
     web:
