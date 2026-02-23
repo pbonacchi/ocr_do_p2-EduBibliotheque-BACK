@@ -49,6 +49,10 @@ public class JwtService {
                 .getSubject();
     }
 
+    public long getExpiration() {
+        return expiration;
+    }
+
     public void validateToken(String token) throws JwtException {
         try {
             Jwts.parser()

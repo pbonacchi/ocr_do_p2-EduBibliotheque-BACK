@@ -1,9 +1,11 @@
 package com.openclassrooms.etudiant.controller;
 
+import com.openclassrooms.etudiant.dto.AuthResponseDTO;
 import com.openclassrooms.etudiant.dto.LoginRequestDTO;
 import com.openclassrooms.etudiant.dto.RegisterDTO;
 import com.openclassrooms.etudiant.mapper.UserDtoMapper;
 import com.openclassrooms.etudiant.service.UserService;
+import com.openclassrooms.etudiant.service.JwtService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -20,6 +22,7 @@ public class UserController {
 
     private final UserService userService;
     private final UserDtoMapper userDtoMapper;
+    private final JwtService jwtService;
 
     @PostMapping("/api/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterDTO registerDTO) {
@@ -28,9 +31,12 @@ public class UserController {
     }
 
     @PostMapping("/api/login")
-    public ResponseEntity<?> login(@Valid @RequestBody LoginRequestDTO loginRequestDTO) {
+    public ResponseEntity<AuthResponseDTO> login(@Valid @RequestBody LoginRequestDTO loginRequestDTO) {
         String jwtToken = userService.login(loginRequestDTO.getLogin(), loginRequestDTO.getPassword());
-        return ResponseEntity.ok(jwtToken);
+        long expiresIn = jwtService.getExpiration();
+        AuthResponseDTO respBody = new AuthResponseDTO(jwtToken, expiresIn);
+
+        return ResponseEntity.ok(respBody);
     }
 
 
