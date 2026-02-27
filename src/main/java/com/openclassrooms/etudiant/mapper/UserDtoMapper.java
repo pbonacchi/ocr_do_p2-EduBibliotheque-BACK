@@ -2,6 +2,7 @@ package com.openclassrooms.etudiant.mapper;
 
 import com.openclassrooms.etudiant.dto.RegisterDTO;
 import com.openclassrooms.etudiant.dto.StudentDTO;
+import com.openclassrooms.etudiant.dto.UpdateStudentDTO;
 import com.openclassrooms.etudiant.entities.User;
 
 import jakarta.validation.Valid;
@@ -22,7 +23,17 @@ public interface UserDtoMapper {
 
     StudentDTO toStudentDTO(User user);
 
+    @Mapping(target = "id", ignore = true)
     @Mapping(target = "password", ignore = true)
+    @Mapping(target = "created_at", ignore = true)
+    @Mapping(target = "updated_at", ignore = true)
     @Mapping(target = "authorities", ignore = true)
-    void updateFromDto(StudentDTO studentDTO, @MappingTarget User existingUser);
+    void updateFromDto(UpdateStudentDTO dto, @MappingTarget User existingUser);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "password", ignore = true)
+    @Mapping(target = "created_at", ignore = true)
+    @Mapping(target = "updated_at", ignore = true)
+    @Mapping(target = "authorities", ignore = true)
+    User toEntity(StudentDTO studentDTO);
 }

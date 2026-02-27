@@ -3,6 +3,7 @@ package com.openclassrooms.etudiant.controller;
 import com.openclassrooms.etudiant.dto.AuthResponseDTO;
 import com.openclassrooms.etudiant.dto.LoginRequestDTO;
 import com.openclassrooms.etudiant.dto.RegisterDTO;
+import com.openclassrooms.etudiant.dto.UpdateStudentDTO;
 import com.openclassrooms.etudiant.dto.StudentDTO;
 import com.openclassrooms.etudiant.mapper.UserDtoMapper;
 import com.openclassrooms.etudiant.service.UserService;
@@ -40,11 +41,17 @@ public class UserController {
         return ResponseEntity.ok(respBody);
     }
 
-    //= CREATE
+    //= CREATE - auto enregistrement d'un étudiant
     @PostMapping("/api/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterDTO registerDTO) {
         userService.register(userDtoMapper.toEntity(registerDTO));
         return new ResponseEntity<>(HttpStatus.CREATED);
+    }
+    //= CREATE - enregistrement d'un étudiant par un admin
+    @PostMapping("/api/students")
+    public ResponseEntity<StudentDTO> createStudent(@Valid @RequestBody StudentDTO studentDTO) {
+        StudentDTO createdStudent = userDtoMapper.toStudentDTO(userService.createStudent(userDtoMapper.toEntity(studentDTO)));
+        return new ResponseEntity<>(createdStudent, HttpStatus.CREATED);
     }
     //= READ - get all students
     @GetMapping("/api/students")
@@ -65,8 +72,8 @@ public class UserController {
     }
     //= UPDATE - update student by id
     @PutMapping("/api/students/{id}")
-    public ResponseEntity<?> updateStudentById(@PathVariable Long id, @Valid @RequestBody RegisterDTO registerDTO) {
-        userService.updateStudentById(id, userDtoMapper.toEntity(registerDTO));
+    public ResponseEntity<?> updateStudentById(@PathVariable Long id, @Valid @RequestBody UpdateStudentDTO updateDTO) {
+        userService.updateStudentById(id, updateDTO, userDtoMapper);
         return new ResponseEntity<>(HttpStatus.OK);
     }
     //= DELETE - delete student by id

@@ -13,6 +13,9 @@ import org.springframework.util.Assert;
 import java.util.List;
 import java.util.Optional;
 
+import com.openclassrooms.etudiant.dto.UpdateStudentDTO;
+import com.openclassrooms.etudiant.mapper.UserDtoMapper;
+
 @Slf4j
 @Service
 @Transactional
@@ -35,7 +38,7 @@ public class UserService {
         }
     }
 
-    //= CREATE
+    //= CREATE - auto enregistrement d'un étudiant
     public void register(User user) {
         Assert.notNull(user, "User must not be null");
         log.info("Registering new user");
@@ -48,13 +51,26 @@ public class UserService {
         userRepository.save(user);
     }
 
-    //= READ - get all students
+    //= CREATE - enregistrement d'un étudiant par un admin
+    public User createStudent(User user) {
+        Assert.notNull(user, "User must not be null");
+        log.info("Creating new student");
+
+        Optional<User> optionalUser = userRepository.findByLogin(user.getLogin());
+        if (optionalUser.isPresent()) {
+            throw new IllegalArgumentException("User with login " + user.getLogin() + " already exists");
+        }
+        user.setPassword(passwordEncoder.encode("password123")); // à remplacer par gestion appropriée des mots de passe
+        return userRepository.save(user);
+    }
+
+    //= READ - récupérer tous les étudiants
     public List<User> getAllStudents() {
         log.info("Fetching all students");
         return userRepository.findAll();
     }
 
-    //= READ - get student by id
+    //= READ - récupérer un étudiant par id
     public Optional<User> getStudentById(Long id) {
         log.info("Fetching student with id {}", id);
         Optional<User> optionalUser = userRepository.findById(id);
@@ -65,25 +81,17 @@ public class UserService {
     }
 
     //= UPDATE
-    public void updateStudentById(Long id, User updatedUser) {
-        Assert.notNull(updatedUser, "Updated user must not be null");
+    public void updateStudentById(Long id, UpdateStudentDTO updateStudentDTO, UserDtoMapper mapper) {
+        Assert.notNull(updateStudentDTO, "Update data must not be null");
         log.info("Updating student with id {}", id);
 
-        Optional<User> optionalUser = userRepository.findById(id);
-        if (!optionalUser.isPresent()) {
-            throw new IllegalArgumentException("User with id " + id + " does not exist");
-        }
-        User existingUser = optionalUser.get();
-        existingUser.setFirstName(updatedUser.getFirstName());
-        existingUser.setLastName(updatedUser.getLastName());
-        existingUser.setLogin(updatedUser.getLogin());
-        if (updatedUser.getPassword() != null && !updatedUser.getPassword().isEmpty()) {
-            existingUser.setPassword(passwordEncoder.encode(updatedUser.getPassword()));
-        }
+        User existingUser = userRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("User with id " + id + " does not exist"));
+        mapper.updateFromDto(updateStudentDTO, existingUser);
         userRepository.save(existingUser);
     }
 
-    //= DELETE - delete student by id
+    //= DELETE
     public void deleteStudentById(Long id) {
         log.info("Deleting student with id {}", id);
         if (!userRepository.existsById(id)) {
