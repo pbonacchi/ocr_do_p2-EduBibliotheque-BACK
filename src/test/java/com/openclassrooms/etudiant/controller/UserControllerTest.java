@@ -2,6 +2,7 @@ package com.openclassrooms.etudiant.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.openclassrooms.etudiant.dto.RegisterDTO;
+import com.openclassrooms.etudiant.dto.UpdateStudentDTO;
 import com.openclassrooms.etudiant.entities.User;
 import com.openclassrooms.etudiant.repository.UserRepository;
 import com.openclassrooms.etudiant.service.UserService;
@@ -21,6 +22,7 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import org.springframework.security.test.context.support.WithMockUser;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
@@ -115,5 +117,27 @@ public class UserControllerTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(MockMvcResultMatchers.status().isCreated());
+    }
+
+    @Test
+    @WithMockUser
+    public void updateStudent_successful() throws Exception {
+        User user = new User();
+        user.setFirstName(FIRST_NAME);
+        user.setLastName(LAST_NAME);
+        user.setLogin(LOGIN);
+        user.setPassword(PASSWORD);
+        userService.register(user);
+
+        UpdateStudentDTO dto = new UpdateStudentDTO("Jane", "Smith", "newlogin");
+
+        mockMvc.perform(MockMvcRequestBuilders.put("/api/students/" + user.getId())
+                        .content(objectMapper.writeValueAsString(dto))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.firstName").value("Jane"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.login").value("newlogin"));
     }
 }
