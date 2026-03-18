@@ -1,0 +1,13 @@
+# Configuration des tests : on n'utilise PAS Docker Compose.
+# Les tests d'intégration (UserControllerTest) utilisent Testcontainers,
+# qui démarre son propre conteneur MySQL automatiquement.
+spring:
+  docker:
+    compose:
+      skip:
+        in-tests: true
+
+# JWT : valeur factice pour les tests (la datasource est fournie par @DynamicPropertySource)
+jwt:
+  secret: test-secret-minimum-256-bits-pour-hs256-encoding-requirement
+  expiration: 3600000
