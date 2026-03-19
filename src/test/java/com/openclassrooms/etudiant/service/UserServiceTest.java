@@ -21,10 +21,9 @@ import com.openclassrooms.etudiant.dto.UpdateStudentDTO;
 import com.openclassrooms.etudiant.mapper.UserDtoMapper;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -126,6 +125,51 @@ public class UserServiceTest {
         verify(jwtService).generateToken(any(UserDetails.class));
     }
 
+    // 1.1.b - test de la méthode login avec un login null
+    @Test
+    public void test_login_with_null_login_throws_IllegalArgumentException() {
+        assertThatThrownBy(() -> userService.login(null, PASSWORD))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Login must not be null");
+    }
+
+    // 1.1.c - test de la méthode login avec un password null
+    @Test
+    public void test_login_with_null_password_throws_IllegalArgumentException() {
+        assertThatThrownBy(() -> userService.login(LOGIN, null))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Password must not be null");
+    }
+
+    // 1.1.d - test de la méthode login avec un login invalide
+    @Test
+    public void test_login_with_invalid_login_throws_IllegalArgumentException() {
+        // GIVEN
+        when(userRepository.findByLogin(LOGIN)).thenReturn(Optional.empty());
+        // THEN
+        assertThatThrownBy(() -> userService.login(LOGIN, PASSWORD))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Invalid credentials");
+    }
+
+    // 1.1.e - test de la méthode login avec un password invalide
+    @Test
+    public void test_login_with_invalid_password_throws_IllegalArgumentException() {
+        // GIVEN
+        User user = UserTestBuilder.aUser()
+            .withLogin(LOGIN)
+            .withPassword(PASSWORD)
+            .build();
+        String invalidPassword = "invalid password";
+        when(userRepository.findByLogin(LOGIN)).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches(invalidPassword, user.getPassword())).thenReturn(false);
+
+        // THEN
+        assertThatThrownBy(() -> userService.login(LOGIN, invalidPassword))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Invalid credentials");
+    }
+
     // 1.2.a - test de la méthode createStudent avec un utilisateur valide
     @Test
     public void test_create_user_by_admin() {
@@ -149,7 +193,27 @@ public class UserServiceTest {
         verify(userRepository).save(user);
     }
 
-    // 1.3.a - test de la méthode getAllStudents avec un utilisateur valide
+    // 1.2.b - test de la méthode createStudent avec un utilisateur null
+    @Test
+    public void test_create_user_by_admin_with_null_user_throws_IllegalArgumentException() {
+        assertThatThrownBy(() -> userService.createStudent(null))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("User must not be null");
+    }
+
+    // 1.2.c - test de la méthode createStudent avec un utilisateur déjà existant
+    @Test
+    public void test_create_user_by_admin_with_already_existing_user_throws_IllegalArgumentException() {
+        // GIVEN
+        User user = UserTestBuilder.aUser().withLogin(LOGIN).build();
+        when(userRepository.findByLogin(LOGIN)).thenReturn(Optional.of(user));
+        // THEN
+        assertThatThrownBy(() -> userService.createStudent(user))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("User with login " + user.getLogin() + " already exists");
+    }
+
+    // 1.3.a - test de la méthode getAllStudents
     @Test
     public void test_get_all_students() {
         // GIVEN
@@ -176,7 +240,7 @@ public class UserServiceTest {
         verify(userRepository).findAll();
     }
 
-    // 1.4.a - test de la méthode getStudentById avec un utilisateur valide
+    // 1.4.a - test de la méthode getStudentById avec un utilisateur existant
     @Test
     public void test_get_student_by_id() {
         // GIVEN
@@ -197,7 +261,19 @@ public class UserServiceTest {
         verify(userRepository).findById(user.getId());
     }
 
-    // 1.5.a - test de la méthode updateStudentById avec un utilisateur valide
+    // 1.4.b - test de la méthode getStudentById avec un utilisateur non existant
+    @Test
+    public void test_get_student_by_id_with_non_existing_user_throws_IllegalArgumentException() {
+        // GIVEN
+        Long id = 1L;
+        when(userRepository.findById(id)).thenReturn(Optional.empty());
+        // THEN
+        assertThatThrownBy(() -> userService.getStudentById(id))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("User with id " + id + " does not exist");
+    }
+
+    // 1.5.a - test de la méthode updateStudentById avec un utilisateur existant
     @Test
     public void test_update_student_by_id() {
         // GIVEN
@@ -219,6 +295,33 @@ public class UserServiceTest {
         verify(userRepository).save(user);
     }
 
+    // 1.5.b - test de la méthode updateStudentById avec un DTO null
+    @Test
+    public void test_update_student_by_id_with_null_dto_throws_IllegalArgumentException() {
+        // GIVEN
+        Long id = 1L;
+        UpdateStudentDTO dto = null;
+
+        // THEN
+        assertThatThrownBy(() -> userService.updateStudentById(id, dto, mapper))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Update data must not be null");
+    }
+
+    // 1.5.c - test de la méthode updateStudentById avec un utilisateur non existant
+    @Test
+    public void test_update_student_by_id_with_non_existing_user_throws_IllegalArgumentException() {
+        // GIVEN
+        Long id = 1L;
+        UpdateStudentDTO dto = new UpdateStudentDTO();
+        when(userRepository.findById(id)).thenReturn(Optional.empty());
+
+        // THEN
+        assertThatThrownBy(() -> userService.updateStudentById(id, dto, mapper))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("User with id " + id + " does not exist");
+    }
+
     // 1.6.a - test de la méthode deleteStudentById avec un utilisateur valide
     @Test
     public void test_delete_student_by_id() {
@@ -232,5 +335,18 @@ public class UserServiceTest {
         // THEN
         verify(userRepository).existsById(id);
         verify(userRepository).deleteById(id);
+    }
+
+    // 1.6.b - test de la méthode deleteStudentById avec un utilisateur non existant
+    @Test
+    public void test_delete_student_by_id_with_non_existing_user_throws_IllegalArgumentException() {
+        // GIVEN
+        Long id = 1L;
+        when(userRepository.existsById(id)).thenReturn(false);
+
+        // THEN
+        assertThatThrownBy(() -> userService.deleteStudentById(id))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("User with id " + id + " does not exist");
     }
 }
