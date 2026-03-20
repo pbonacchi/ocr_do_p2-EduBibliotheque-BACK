@@ -44,35 +44,11 @@ public class UserServiceTest {
     @InjectMocks
     private UserService userService;
 
-    // 0.1.a - test de la méthode register avec un utilisateur null
-    @Test
-    public void test_create_null_user_throws_IllegalArgumentException() {
-        // GIVEN
-
-        // THEN
-        Assertions.assertThrows(IllegalArgumentException.class,
-                () -> userService.register(null));
-    }
-
-    // 0.1.b - test de la méthode register avec un utilisateur déjà existant
-    @Test
-    public void test_create_already_exist_user_throws_IllegalArgumentException() {
-        // GIVEN
-        User user = UserTestBuilder.aUser()
-            .withLogin(LOGIN)
-            .withPassword(PASSWORD)
-            .withFirstName(FIRST_NAME)
-            .withLastName(LAST_NAME)
-            .build();
-        when(passwordEncoder.encode(PASSWORD)).thenReturn(PASSWORD);
-        when(userRepository.findByLogin(any())).thenReturn(Optional.of(user));
-
-        // THEN
-        Assertions.assertThrows(IllegalArgumentException.class,
-                () -> userService.register(user));
-    }
-
-    // 0.1.c - test de la méthode register avec un utilisateur valide
+    // 0.1.a - test de la méthode register avec un utilisateur valide
+    /* Vérifie que register enregistre un utilisateur valide.
+     * Entrants : user valide + findByLogin -> Optional.empty 
+     * Sortants : le user enregistré dans la base de données est le même que celui passé en paramètre.
+     */
     @Test
     public void test_create_user() {
         // GIVEN
@@ -82,7 +58,7 @@ public class UserServiceTest {
             .withFirstName(FIRST_NAME)
             .withLastName(LAST_NAME)
             .build();
-        when(passwordEncoder.encode(PASSWORD)).thenReturn(PASSWORD);
+        //when(passwordEncoder.encode(PASSWORD)).thenReturn(PASSWORD);
         when(userRepository.findByLogin(any())).thenReturn(Optional.empty());
 
         // WHEN
@@ -94,7 +70,51 @@ public class UserServiceTest {
         assertThat(userCaptor.getValue()).isEqualTo(user);
     }
 
+    // 0.1.b - test de la méthode register avec un utilisateur null
+    /* Vérifie que register rejette une entrée null.
+     * Entrants : user = null 
+     * Sortants : une exception IllegalArgumentException ("User must not be null").
+     */
+    @Test
+    public void test_create_null_user_throws_IllegalArgumentException() {
+        // GIVEN
+
+        // THEN
+        Assertions.assertThrows(IllegalArgumentException.class,
+                () -> userService.register(null));
+    }
+
+    // 0.1.c - test de la méthode register avec un utilisateur déjà existant
+    /* Vérifie que register rejette un login déjà existant.
+     * Entrants : user valide + findByLogin -> Optional.of(user) 
+     * Sortants : une exception IllegalArgumentException.
+     */
+    @Test
+    public void test_create_already_exist_user_throws_IllegalArgumentException() {
+        // GIVEN
+        User user = UserTestBuilder.aUser()
+            .withLogin(LOGIN)
+            .withPassword(PASSWORD)
+            .withFirstName(FIRST_NAME)
+            .withLastName(LAST_NAME)
+            .build();
+        when(userRepository.findByLogin(any())).thenReturn(Optional.of(user));
+
+        // THEN
+        Assertions.assertThrows(IllegalArgumentException.class,
+                () -> userService.register(user));
+    }
+
     // 1.1.a - test de la méthode login avec un login et password valides
+    /* Vérifie que login retourne un token valide.
+     * Entrants : login et password valides
+     *            findByLogin -> Optional.of(user)
+     *            passwordEncoder.matches -> true avec le password envoyé et le password de l'utilisateur
+     *            jwtService.generateToken -> "expectedToken" avec un UserDetails valide
+     * Sortants : le token retourné est correct
+     *            passwordEncoder.matches a été appelé avec le password envoyé et le password de l'utilisateur
+     *            jwtService.generateToken a été appelé avec un UserDetails valide
+     */
     @Test
     public void test_login_with_valid_login_and_password() {
         // GIVEN
@@ -126,6 +146,10 @@ public class UserServiceTest {
     }
 
     // 1.1.b - test de la méthode login avec un login null
+    /* Vérifie que login rejette un login null.
+     * Entrants : login = null, password valide
+     * Sortants : une exception IllegalArgumentException ("Login must not be null").
+     */
     @Test
     public void test_login_with_null_login_throws_IllegalArgumentException() {
         assertThatThrownBy(() -> userService.login(null, PASSWORD))
@@ -134,6 +158,10 @@ public class UserServiceTest {
     }
 
     // 1.1.c - test de la méthode login avec un password null
+    /* Vérifie que login rejette un password null.
+     * Entrants : login valide, password = null
+     * Sortants : une exception IllegalArgumentException ("Password must not be null").
+     */
     @Test
     public void test_login_with_null_password_throws_IllegalArgumentException() {
         assertThatThrownBy(() -> userService.login(LOGIN, null))
@@ -142,6 +170,10 @@ public class UserServiceTest {
     }
 
     // 1.1.d - test de la méthode login avec un login invalide
+    /* Vérifie que login rejette un login invalide.
+     * Entrants : findByLogin -> Optional.empty
+     * Sortants : une exception IllegalArgumentException ("Invalid credentials").
+     */
     @Test
     public void test_login_with_invalid_login_throws_IllegalArgumentException() {
         // GIVEN
@@ -153,6 +185,11 @@ public class UserServiceTest {
     }
 
     // 1.1.e - test de la méthode login avec un password invalide
+    /* Vérifie que login rejette un password invalide.
+     * Entrants : findByLogin -> Optional.of(user)
+     *            passwordEncoder.matches -> false avec le password envoyé et le password de l'utilisateur
+     * Sortants : une exception IllegalArgumentException ("Invalid credentials").
+     */
     @Test
     public void test_login_with_invalid_password_throws_IllegalArgumentException() {
         // GIVEN
@@ -171,6 +208,13 @@ public class UserServiceTest {
     }
 
     // 1.2.a - test de la méthode createStudent avec un utilisateur valide
+    /* Vérifie que createStudent enregistre un utilisateur valide.
+     * Entrants : user valide + findByLogin -> Optional.empty
+     *            passwordEncoder.encode -> "encoded-password" avec le password par défaut
+     * Sortants : le user enregistré dans la base de données est le même que celui passé en paramètre
+     *            passwordEncoder.encode a été appelé avec le password par défaut
+     *            userRepository.save a été appelé avec le user
+     */
     @Test
     public void test_create_user_by_admin() {
         // GIVEN
@@ -194,6 +238,10 @@ public class UserServiceTest {
     }
 
     // 1.2.b - test de la méthode createStudent avec un utilisateur null
+    /* Vérifie que createStudent rejette un utilisateur null.
+     * Entrants : user = null
+     * Sortants : une exception IllegalArgumentException ("User must not be null").
+     */
     @Test
     public void test_create_user_by_admin_with_null_user_throws_IllegalArgumentException() {
         assertThatThrownBy(() -> userService.createStudent(null))
@@ -202,6 +250,10 @@ public class UserServiceTest {
     }
 
     // 1.2.c - test de la méthode createStudent avec un utilisateur déjà existant
+    /* Vérifie que createStudent rejette un login déjà existant.
+     * Entrants : user valide + findByLogin -> Optional.of(user)
+     * Sortants : une exception IllegalArgumentException ("User with login XXX already exists").
+     */
     @Test
     public void test_create_user_by_admin_with_already_existing_user_throws_IllegalArgumentException() {
         // GIVEN
@@ -214,6 +266,11 @@ public class UserServiceTest {
     }
 
     // 1.3.a - test de la méthode getAllStudents
+    /* Vérifie que getAllStudents retourne tous les utilisateurs.
+     * Entrants : findAll -> List<User> non vide
+     * Sortants : la liste des utilisateurs retournée est correcte
+     *            findAll a été appelé
+     */
     @Test
     public void test_get_all_students() {
         // GIVEN
@@ -241,6 +298,11 @@ public class UserServiceTest {
     }
 
     // 1.4.a - test de la méthode getStudentById avec un utilisateur existant
+    /* Vérifie que getStudentById retourne un utilisateur existant.
+     * Entrants : findById -> Optional.of(user)
+     * Sortants : l'utilisateur retourné est le même que celui passé en paramètre
+     *            findById a été appelé avec l'id de l'utilisateur
+     */
     @Test
     public void test_get_student_by_id() {
         // GIVEN
@@ -262,6 +324,10 @@ public class UserServiceTest {
     }
 
     // 1.4.b - test de la méthode getStudentById avec un utilisateur non existant
+    /* Vérifie que getStudentById rejette un utilisateur non existant.
+     * Entrants : findById -> Optional.empty
+     * Sortants : une exception IllegalArgumentException ("User with id XXX does not exist").
+     */
     @Test
     public void test_get_student_by_id_with_non_existing_user_throws_IllegalArgumentException() {
         // GIVEN
@@ -274,6 +340,14 @@ public class UserServiceTest {
     }
 
     // 1.5.a - test de la méthode updateStudentById avec un utilisateur existant
+    /* Vérifie que updateStudentById met à jour un utilisateur existant.
+     * Entrants : findById -> Optional.of(user)
+     *            updateFromDto -> user avec les nouvelles données
+     * Sortants : le user enregistré dans la base de données est le même que celui passé en paramètre
+     *            findById a été appelé avec l'id de l'utilisateur
+     *            updateFromDto a été appelé avec le DTO et le user
+     *            userRepository.save a été appelé avec le user
+     */
     @Test
     public void test_update_student_by_id() {
         // GIVEN
@@ -296,6 +370,10 @@ public class UserServiceTest {
     }
 
     // 1.5.b - test de la méthode updateStudentById avec un DTO null
+    /* Vérifie que updateStudentById rejette un DTO null.
+     * Entrants : id, dto = null
+     * Sortants : une exception IllegalArgumentException ("Update data must not be null").
+     */
     @Test
     public void test_update_student_by_id_with_null_dto_throws_IllegalArgumentException() {
         // GIVEN
@@ -309,6 +387,10 @@ public class UserServiceTest {
     }
 
     // 1.5.c - test de la méthode updateStudentById avec un utilisateur non existant
+    /* Vérifie que updateStudentById rejette un utilisateur non existant.
+     * Entrants : findById -> Optional.empty
+     * Sortants : une exception IllegalArgumentException ("User with id XXX does not exist").
+     */
     @Test
     public void test_update_student_by_id_with_non_existing_user_throws_IllegalArgumentException() {
         // GIVEN
@@ -323,6 +405,11 @@ public class UserServiceTest {
     }
 
     // 1.6.a - test de la méthode deleteStudentById avec un utilisateur valide
+    /* Vérifie que deleteStudentById supprime un utilisateur existant.
+     * Entrants : existsById -> true
+     * Sortants : existsById a été appelé avec l'id de l'utilisateur
+     *            deleteById a été appelé avec l'id de l'utilisateur
+     */
     @Test
     public void test_delete_student_by_id() {
         // GIVEN
@@ -338,6 +425,10 @@ public class UserServiceTest {
     }
 
     // 1.6.b - test de la méthode deleteStudentById avec un utilisateur non existant
+    /* Vérifie que deleteStudentById rejette un utilisateur non existant.
+     * Entrants : existsById -> false
+     * Sortants : une exception IllegalArgumentException ("User with id XXX does not exist").
+     */
     @Test
     public void test_delete_student_by_id_with_non_existing_user_throws_IllegalArgumentException() {
         // GIVEN
