@@ -79,51 +79,8 @@ public class UserControllerTest {
     }
 
     @Test
-    public void registerUserWithoutRequiredData() throws Exception {
-        // Vérifie que POST /api/register rejette une inscription invalide.
-        // Entrants : JSON vide (champs obligatoires manquants).
-        // Sortants : HTTP 400 Bad Request + aucun enregistrement en base.
-        // GIVEN
-        RegisterDTO registerDTO = new RegisterDTO();
-
-        // WHEN
-        mockMvc.perform(post(REGISTER_URL)
-                        .content(objectMapper.writeValueAsString(registerDTO))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andDo(print())
-                .andExpect(status().isBadRequest());
-
-        assertThat(userRepository.count()).isZero();
-    }
-
-    @Test
-    public void registerAlreadyExistUser() throws Exception {
-        // Vérifie que POST /api/register rejette un login déjà existant.
-        // Entrants : un utilisateur existant en base + même login dans la requête.
-        // Sortants : HTTP 400 Bad Request + un seul utilisateur conservé en base.
-        // GIVEN
-        userRepository.save(buildPersistedUser(FIRST_NAME, LAST_NAME, LOGIN, PASSWORD));
-
-        RegisterDTO registerDTO = new RegisterDTO();
-        registerDTO.setFirstName(FIRST_NAME);
-        registerDTO.setLastName(LAST_NAME);
-        registerDTO.setLogin(LOGIN);
-        registerDTO.setPassword(PASSWORD);
-
-        // WHEN
-        mockMvc.perform(post(REGISTER_URL)
-                        .content(objectMapper.writeValueAsString(registerDTO))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andDo(print())
-                .andExpect(status().isBadRequest());
-
-        assertThat(userRepository.count()).isEqualTo(1L);
-    }
-
-    @Test
-    public void registerUserSuccessful() throws Exception {
+    public void ItUcReg01_Register_ReturnsCreated_ForValidRequest() throws Exception {
+        // IT-UC-REG-01
         // Vérifie que POST /api/register crée un nouvel étudiant.
         // Entrants : RegisterDTO valide avec login inédit.
         // Sortants : HTTP 201 Created + utilisateur persistant en base.
@@ -149,7 +106,54 @@ public class UserControllerTest {
     }
 
     @Test
-    public void loginSuccessful() throws Exception {
+    public void ItUcReg02_Register_ReturnsBadRequest_ForMissingRequiredFields() throws Exception {
+        // IT-UC-REG-02
+        // Vérifie que POST /api/register rejette une inscription invalide.
+        // Entrants : JSON vide (champs obligatoires manquants).
+        // Sortants : HTTP 400 Bad Request + aucun enregistrement en base.
+        // GIVEN
+        RegisterDTO registerDTO = new RegisterDTO();
+
+        // WHEN
+        mockMvc.perform(post(REGISTER_URL)
+                        .content(objectMapper.writeValueAsString(registerDTO))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().isBadRequest());
+
+        assertThat(userRepository.count()).isZero();
+    }
+
+    @Test
+    public void ItUcReg03_Register_ReturnsBadRequest_ForExistingLogin() throws Exception {
+        // IT-UC-REG-03
+        // Vérifie que POST /api/register rejette un login déjà existant.
+        // Entrants : un utilisateur existant en base + même login dans la requête.
+        // Sortants : HTTP 400 Bad Request + un seul utilisateur conservé en base.
+        // GIVEN
+        userRepository.save(buildPersistedUser(FIRST_NAME, LAST_NAME, LOGIN, PASSWORD));
+
+        RegisterDTO registerDTO = new RegisterDTO();
+        registerDTO.setFirstName(FIRST_NAME);
+        registerDTO.setLastName(LAST_NAME);
+        registerDTO.setLogin(LOGIN);
+        registerDTO.setPassword(PASSWORD);
+
+        // WHEN
+        mockMvc.perform(post(REGISTER_URL)
+                        .content(objectMapper.writeValueAsString(registerDTO))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().isBadRequest());
+
+        assertThat(userRepository.count()).isEqualTo(1L);
+    }
+
+    @Test
+    public void ItUcLog01_Login_ReturnsOk_ForValidCredentials() throws Exception {
+        // IT-UC-LOG-01
         // Vérifie que POST /api/login authentifie un utilisateur existant.
         // Entrants : login/password valides d'un utilisateur déjà présent en base.
         // Sortants : HTTP 200 OK + réponse contenant idToken et expiresIn.
@@ -172,7 +176,8 @@ public class UserControllerTest {
     }
 
     @Test
-    public void loginWithInvalidPassword() throws Exception {
+    public void ItUcLog02_Login_ReturnsBadRequest_ForInvalidPassword() throws Exception {
+        // IT-UC-LOG-02
         // Vérifie que POST /api/login rejette un mot de passe invalide.
         // Entrants : login valide + password incorrect.
         // Sortants : HTTP 400 Bad Request.
@@ -192,7 +197,8 @@ public class UserControllerTest {
     }
 
     @Test
-    public void loginWithMissingRequiredData() throws Exception {
+    public void ItUcLog03_Login_ReturnsBadRequest_ForMissingRequiredFields() throws Exception {
+        // IT-UC-LOG-03
         // Vérifie que POST /api/login rejette une requête invalide.
         // Entrants : LoginRequestDTO incomplet (login/password manquants).
         // Sortants : HTTP 400 Bad Request.
@@ -210,7 +216,8 @@ public class UserControllerTest {
 
     @Test
     @WithMockUser(username = "admin")
-    public void createStudentSuccessful() throws Exception {
+    public void ItUcCrt01_CreateStudent_ReturnsCreated_ForAuthenticatedValidRequest() throws Exception {
+        // IT-UC-CRT-01
         // Vérifie que POST /api/students crée un étudiant via un endpoint protégé.
         // Entrants : utilisateur authentifié + StudentDTO valide.
         // Sortants : HTTP 201 Created + étudiant retourné et persistant en base.
@@ -238,7 +245,8 @@ public class UserControllerTest {
     }
 
     @Test
-    public void createStudentWithoutAuthentication() throws Exception {
+    public void ItUcCrt02_CreateStudent_ReturnsUnauthorized_ForUnauthenticatedRequest() throws Exception {
+        // IT-UC-CRT-02
         // Vérifie que POST /api/students est inaccessible sans authentification.
         // Entrants : StudentDTO valide mais requête non authentifiée.
         // Sortants : HTTP 401 Unauthorized + aucun étudiant créé.
@@ -261,7 +269,8 @@ public class UserControllerTest {
 
     @Test
     @WithMockUser(username = "admin")
-    public void createStudentWithAlreadyExistingLogin() throws Exception {
+    public void ItUcCrt03_CreateStudent_ReturnsBadRequest_ForExistingLogin() throws Exception {
+        // IT-UC-CRT-03
         // Vérifie que POST /api/students rejette un login déjà existant.
         // Entrants : utilisateur authentifié + StudentDTO avec login déjà en base.
         // Sortants : HTTP 400 Bad Request + un seul enregistrement conservé.
@@ -285,7 +294,8 @@ public class UserControllerTest {
 
     @Test
     @WithMockUser(username = "admin")
-    public void getAllStudentsSuccessful() throws Exception {
+    public void ItUcGetall01_GetAllStudents_ReturnsOk_ForAuthenticatedRequest() throws Exception {
+        // IT-UC-GETALL-01
         // Vérifie que GET /api/students retourne la liste des étudiants.
         // Entrants : 2 étudiants déjà présents en base + utilisateur authentifié.
         // Sortants : HTTP 200 OK + tableau JSON de taille 2.
@@ -303,7 +313,8 @@ public class UserControllerTest {
     }
 
     @Test
-    public void getAllStudentsWithoutAuthentication() throws Exception {
+    public void ItUcGetall02_GetAllStudents_ReturnsUnauthorized_ForUnauthenticatedRequest() throws Exception {
+        // IT-UC-GETALL-02
         // Vérifie que GET /api/students est inaccessible sans authentification.
         // Entrants : requête non authentifiée.
         // Sortants : HTTP 401 Unauthorized.
@@ -315,7 +326,8 @@ public class UserControllerTest {
 
     @Test
     @WithMockUser(username = "admin")
-    public void getStudentByIdSuccessful() throws Exception {
+    public void ItUcGetid01_GetStudentById_ReturnsOk_ForAuthenticatedExistingId() throws Exception {
+        // IT-UC-GETID-01
         // Vérifie que GET /api/students/{id} retourne un étudiant existant.
         // Entrants : id d'un étudiant présent en base + utilisateur authentifié.
         // Sortants : HTTP 200 OK + JSON de l'étudiant correspondant.
@@ -334,7 +346,8 @@ public class UserControllerTest {
 
     @Test
     @WithMockUser(username = "admin")
-    public void getStudentByIdWithNonExistingId() throws Exception {
+    public void ItUcGetid02_GetStudentById_ReturnsBadRequest_ForAuthenticatedMissingId() throws Exception {
+        // IT-UC-GETID-02
         // Vérifie que GET /api/students/{id} rejette un id inexistant.
         // Entrants : id absent en base + utilisateur authentifié.
         // Sortants : HTTP 400 Bad Request.
@@ -345,7 +358,8 @@ public class UserControllerTest {
     }
 
     @Test
-    public void getStudentByIdWithoutAuthentication() throws Exception {
+    public void ItUcGetid03_GetStudentById_ReturnsUnauthorized_ForUnauthenticatedRequest() throws Exception {
+        // IT-UC-GETID-03
         // Vérifie que GET /api/students/{id} est inaccessible sans authentification.
         // Entrants : id quelconque mais requête non authentifiée.
         // Sortants : HTTP 401 Unauthorized.
@@ -357,7 +371,8 @@ public class UserControllerTest {
 
     @Test
     @WithMockUser(username = "admin")
-    public void updateStudentByIdSuccessful() throws Exception {
+    public void ItUcUpd01_UpdateStudentById_ReturnsOk_ForAuthenticatedValidRequest() throws Exception {
+        // IT-UC-UPD-01
         // Vérifie que PUT /api/students/{id} met à jour un étudiant existant.
         // Entrants : id existant + UpdateStudentDTO valide + utilisateur authentifié.
         // Sortants : HTTP 200 OK + données mises à jour en base.
@@ -381,7 +396,8 @@ public class UserControllerTest {
 
     @Test
     @WithMockUser(username = "admin")
-    public void updateStudentByIdWithInvalidPayload() throws Exception {
+    public void ItUcUpd02_UpdateStudentById_ReturnsBadRequest_ForAuthenticatedInvalidPayload() throws Exception {
+        // IT-UC-UPD-02
         // Vérifie que PUT /api/students/{id} rejette un DTO invalide.
         // Entrants : id existant + UpdateStudentDTO sans champs obligatoires.
         // Sortants : HTTP 400 Bad Request + données en base inchangées.
@@ -405,7 +421,8 @@ public class UserControllerTest {
 
     @Test
     @WithMockUser(username = "admin")
-    public void updateStudentByIdWithNonExistingId() throws Exception {
+    public void ItUcUpd03_UpdateStudentById_ReturnsBadRequest_ForAuthenticatedMissingId() throws Exception {
+        // IT-UC-UPD-03
         // Vérifie que PUT /api/students/{id} rejette un id inexistant.
         // Entrants : id absent en base + UpdateStudentDTO valide.
         // Sortants : HTTP 400 Bad Request.
@@ -422,7 +439,8 @@ public class UserControllerTest {
     }
 
     @Test
-    public void updateStudentByIdWithoutAuthentication() throws Exception {
+    public void ItUcUpd04_UpdateStudentById_ReturnsUnauthorized_ForUnauthenticatedRequest() throws Exception {
+        // IT-UC-UPD-04
         // Vérifie que PUT /api/students/{id} est inaccessible sans authentification.
         // Entrants : id + UpdateStudentDTO valide mais requête non authentifiée.
         // Sortants : HTTP 401 Unauthorized.
@@ -440,7 +458,8 @@ public class UserControllerTest {
 
     @Test
     @WithMockUser(username = "admin")
-    public void deleteStudentByIdSuccessful() throws Exception {
+    public void ItUcDel01_DeleteStudentById_ReturnsNoContent_ForAuthenticatedExistingId() throws Exception {
+        // IT-UC-DEL-01
         // Vérifie que DELETE /api/students/{id} supprime un étudiant existant.
         // Entrants : id existant + utilisateur authentifié.
         // Sortants : HTTP 204 No Content + étudiant supprimé de la base.
@@ -457,7 +476,8 @@ public class UserControllerTest {
 
     @Test
     @WithMockUser(username = "admin")
-    public void deleteStudentByIdWithNonExistingId() throws Exception {
+    public void ItUcDel02_DeleteStudentById_ReturnsBadRequest_ForAuthenticatedMissingId() throws Exception {
+        // IT-UC-DEL-02
         // Vérifie que DELETE /api/students/{id} rejette un id inexistant.
         // Entrants : id absent en base + utilisateur authentifié.
         // Sortants : HTTP 400 Bad Request.
@@ -468,7 +488,8 @@ public class UserControllerTest {
     }
 
     @Test
-    public void deleteStudentByIdWithoutAuthentication() throws Exception {
+    public void ItUcDel03_DeleteStudentById_ReturnsUnauthorized_ForUnauthenticatedRequest() throws Exception {
+        // IT-UC-DEL-03
         // Vérifie que DELETE /api/students/{id} est inaccessible sans authentification.
         // Entrants : id quelconque mais requête non authentifiée.
         // Sortants : HTTP 401 Unauthorized.

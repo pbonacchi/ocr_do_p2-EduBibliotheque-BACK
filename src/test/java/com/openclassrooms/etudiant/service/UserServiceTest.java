@@ -44,13 +44,13 @@ public class UserServiceTest {
     @InjectMocks
     private UserService userService;
 
-    // 0.1.a - test de la méthode register avec un utilisateur valide
+    // UT-US-REG-01 - test de la méthode register avec un utilisateur valide
     /* Vérifie que register enregistre un utilisateur valide.
      * Entrants : user valide + findByLogin -> Optional.empty 
      * Sortants : le user enregistré dans la base de données est le même que celui passé en paramètre.
      */
     @Test
-    public void test_create_user() {
+    public void UtUsReg01_Register_SavesUser_ForValidUser() {
         // GIVEN
         User user = UserTestBuilder.aUser()
             .withLogin(LOGIN)
@@ -70,13 +70,13 @@ public class UserServiceTest {
         assertThat(userCaptor.getValue()).isEqualTo(user);
     }
 
-    // 0.1.b - test de la méthode register avec un utilisateur null
+    // UT-US-REG-02 - test de la méthode register avec un utilisateur null
     /* Vérifie que register rejette une entrée null.
      * Entrants : user = null 
      * Sortants : une exception IllegalArgumentException ("User must not be null").
      */
     @Test
-    public void test_create_null_user_throws_IllegalArgumentException() {
+    public void UtUsReg02_Register_ThrowsIllegalArgumentException_ForNullUser() {
         // GIVEN
 
         // THEN
@@ -84,13 +84,13 @@ public class UserServiceTest {
                 () -> userService.register(null));
     }
 
-    // 0.1.c - test de la méthode register avec un utilisateur déjà existant
+    // UT-US-REG-03 - test de la méthode register avec un utilisateur déjà existant
     /* Vérifie que register rejette un login déjà existant.
      * Entrants : user valide + findByLogin -> Optional.of(user) 
      * Sortants : une exception IllegalArgumentException.
      */
     @Test
-    public void test_create_already_exist_user_throws_IllegalArgumentException() {
+    public void UtUsReg03_Register_ThrowsIllegalArgumentException_ForExistingLogin() {
         // GIVEN
         User user = UserTestBuilder.aUser()
             .withLogin(LOGIN)
@@ -105,7 +105,7 @@ public class UserServiceTest {
                 () -> userService.register(user));
     }
 
-    // 1.1.a - test de la méthode login avec un login et password valides
+    // UT-US-LOG-01 - test de la méthode login avec un login et password valides
     /* Vérifie que login retourne un token valide.
      * Entrants : login et password valides
      *            findByLogin -> Optional.of(user)
@@ -116,7 +116,7 @@ public class UserServiceTest {
      *            jwtService.generateToken a été appelé avec un UserDetails valide
      */
     @Test
-    public void test_login_with_valid_login_and_password() {
+    public void UtUsLog01_Login_ReturnsToken_ForValidCredentials() {
         // GIVEN
         // Créer un utilisateur valide
         User user = UserTestBuilder.aUser()
@@ -145,37 +145,37 @@ public class UserServiceTest {
         verify(jwtService).generateToken(any(UserDetails.class));
     }
 
-    // 1.1.b - test de la méthode login avec un login null
+    // UT-US-LOG-02 - test de la méthode login avec un login null
     /* Vérifie que login rejette un login null.
      * Entrants : login = null, password valide
      * Sortants : une exception IllegalArgumentException ("Login must not be null").
      */
     @Test
-    public void test_login_with_null_login_throws_IllegalArgumentException() {
+    public void UtUsLog02_Login_ThrowsIllegalArgumentException_ForNullLogin() {
         assertThatThrownBy(() -> userService.login(null, PASSWORD))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("Login must not be null");
     }
 
-    // 1.1.c - test de la méthode login avec un password null
+    // UT-US-LOG-03 - test de la méthode login avec un password null
     /* Vérifie que login rejette un password null.
      * Entrants : login valide, password = null
      * Sortants : une exception IllegalArgumentException ("Password must not be null").
      */
     @Test
-    public void test_login_with_null_password_throws_IllegalArgumentException() {
+    public void UtUsLog03_Login_ThrowsIllegalArgumentException_ForNullPassword() {
         assertThatThrownBy(() -> userService.login(LOGIN, null))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("Password must not be null");
     }
 
-    // 1.1.d - test de la méthode login avec un login invalide
+    // UT-US-LOG-04 - test de la méthode login avec un login invalide
     /* Vérifie que login rejette un login invalide.
      * Entrants : findByLogin -> Optional.empty
      * Sortants : une exception IllegalArgumentException ("Invalid credentials").
      */
     @Test
-    public void test_login_with_invalid_login_throws_IllegalArgumentException() {
+    public void UtUsLog04_Login_ThrowsIllegalArgumentException_ForUnknownLogin() {
         // GIVEN
         when(userRepository.findByLogin(LOGIN)).thenReturn(Optional.empty());
         // THEN
@@ -184,14 +184,14 @@ public class UserServiceTest {
             .hasMessage("Invalid credentials");
     }
 
-    // 1.1.e - test de la méthode login avec un password invalide
+    // UT-US-LOG-05 - test de la méthode login avec un password invalide
     /* Vérifie que login rejette un password invalide.
      * Entrants : findByLogin -> Optional.of(user)
      *            passwordEncoder.matches -> false avec le password envoyé et le password de l'utilisateur
      * Sortants : une exception IllegalArgumentException ("Invalid credentials").
      */
     @Test
-    public void test_login_with_invalid_password_throws_IllegalArgumentException() {
+    public void UtUsLog05_Login_ThrowsIllegalArgumentException_ForInvalidPassword() {
         // GIVEN
         User user = UserTestBuilder.aUser()
             .withLogin(LOGIN)
@@ -207,7 +207,7 @@ public class UserServiceTest {
             .hasMessage("Invalid credentials");
     }
 
-    // 1.2.a - test de la méthode createStudent avec un utilisateur valide
+    // UT-US-CRT-01 - test de la méthode createStudent avec un utilisateur valide
     /* Vérifie que createStudent enregistre un utilisateur valide.
      * Entrants : user valide + findByLogin -> Optional.empty
      *            passwordEncoder.encode -> "encoded-password" avec le password par défaut
@@ -216,7 +216,7 @@ public class UserServiceTest {
      *            userRepository.save a été appelé avec le user
      */
     @Test
-    public void test_create_user_by_admin() {
+    public void UtUsCrt01_CreateStudent_SavesUser_ForValidUser() {
         // GIVEN
         User user = UserTestBuilder.aUser()
             .withLogin(LOGIN)
@@ -237,25 +237,25 @@ public class UserServiceTest {
         verify(userRepository).save(user);
     }
 
-    // 1.2.b - test de la méthode createStudent avec un utilisateur null
+    // UT-US-CRT-02 - test de la méthode createStudent avec un utilisateur null
     /* Vérifie que createStudent rejette un utilisateur null.
      * Entrants : user = null
      * Sortants : une exception IllegalArgumentException ("User must not be null").
      */
     @Test
-    public void test_create_user_by_admin_with_null_user_throws_IllegalArgumentException() {
+    public void UtUsCrt02_CreateStudent_ThrowsIllegalArgumentException_ForNullUser() {
         assertThatThrownBy(() -> userService.createStudent(null))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("User must not be null");
     }
 
-    // 1.2.c - test de la méthode createStudent avec un utilisateur déjà existant
+    // UT-US-CRT-03 - test de la méthode createStudent avec un utilisateur déjà existant
     /* Vérifie que createStudent rejette un login déjà existant.
      * Entrants : user valide + findByLogin -> Optional.of(user)
      * Sortants : une exception IllegalArgumentException ("User with login XXX already exists").
      */
     @Test
-    public void test_create_user_by_admin_with_already_existing_user_throws_IllegalArgumentException() {
+    public void UtUsCrt03_CreateStudent_ThrowsIllegalArgumentException_ForExistingLogin() {
         // GIVEN
         User user = UserTestBuilder.aUser().withLogin(LOGIN).build();
         when(userRepository.findByLogin(LOGIN)).thenReturn(Optional.of(user));
@@ -265,14 +265,14 @@ public class UserServiceTest {
             .hasMessage("User with login " + user.getLogin() + " already exists");
     }
 
-    // 1.3.a - test de la méthode getAllStudents
+    // UT-US-GETALL-01 - test de la méthode getAllStudents
     /* Vérifie que getAllStudents retourne tous les utilisateurs.
      * Entrants : findAll -> List<User> non vide
      * Sortants : la liste des utilisateurs retournée est correcte
      *            findAll a été appelé
      */
     @Test
-    public void test_get_all_students() {
+    public void UtUsGetall01_GetAllStudents_ReturnsStudentList_ForExistingStudents() {
         // GIVEN
         User user1 = UserTestBuilder.aUser()
             .withLogin(LOGIN + "1")
@@ -297,14 +297,14 @@ public class UserServiceTest {
         verify(userRepository).findAll();
     }
 
-    // 1.4.a - test de la méthode getStudentById avec un utilisateur existant
+    // UT-US-GETID-01 - test de la méthode getStudentById avec un utilisateur existant
     /* Vérifie que getStudentById retourne un utilisateur existant.
      * Entrants : findById -> Optional.of(user)
      * Sortants : l'utilisateur retourné est le même que celui passé en paramètre
      *            findById a été appelé avec l'id de l'utilisateur
      */
     @Test
-    public void test_get_student_by_id() {
+    public void UtUsGetid01_GetStudentById_ReturnsStudent_ForExistingId() {
         // GIVEN
         User user = UserTestBuilder.aUser()
             .withId(1L)
@@ -323,13 +323,13 @@ public class UserServiceTest {
         verify(userRepository).findById(user.getId());
     }
 
-    // 1.4.b - test de la méthode getStudentById avec un utilisateur non existant
+    // UT-US-GETID-02 - test de la méthode getStudentById avec un utilisateur non existant
     /* Vérifie que getStudentById rejette un utilisateur non existant.
      * Entrants : findById -> Optional.empty
      * Sortants : une exception IllegalArgumentException ("User with id XXX does not exist").
      */
     @Test
-    public void test_get_student_by_id_with_non_existing_user_throws_IllegalArgumentException() {
+    public void UtUsGetid02_GetStudentById_ThrowsIllegalArgumentException_ForMissingId() {
         // GIVEN
         Long id = 1L;
         when(userRepository.findById(id)).thenReturn(Optional.empty());
@@ -339,7 +339,7 @@ public class UserServiceTest {
             .hasMessage("User with id " + id + " does not exist");
     }
 
-    // 1.5.a - test de la méthode updateStudentById avec un utilisateur existant
+    // UT-US-UPD-01 - test de la méthode updateStudentById avec un utilisateur existant
     /* Vérifie que updateStudentById met à jour un utilisateur existant.
      * Entrants : findById -> Optional.of(user)
      *            updateFromDto -> user avec les nouvelles données
@@ -349,7 +349,7 @@ public class UserServiceTest {
      *            userRepository.save a été appelé avec le user
      */
     @Test
-    public void test_update_student_by_id() {
+    public void UtUsUpd01_UpdateStudentById_UpdatesStudent_ForValidIdAndDto() {
         // GIVEN
         Long id = 1L;
         User user = UserTestBuilder.aUser()
@@ -369,13 +369,13 @@ public class UserServiceTest {
         verify(userRepository).save(user);
     }
 
-    // 1.5.b - test de la méthode updateStudentById avec un DTO null
+    // UT-US-UPD-02 - test de la méthode updateStudentById avec un DTO null
     /* Vérifie que updateStudentById rejette un DTO null.
      * Entrants : id, dto = null
      * Sortants : une exception IllegalArgumentException ("Update data must not be null").
      */
     @Test
-    public void test_update_student_by_id_with_null_dto_throws_IllegalArgumentException() {
+    public void UtUsUpd02_UpdateStudentById_ThrowsIllegalArgumentException_ForNullDto() {
         // GIVEN
         Long id = 1L;
         UpdateStudentDTO dto = null;
@@ -386,13 +386,13 @@ public class UserServiceTest {
             .hasMessage("Update data must not be null");
     }
 
-    // 1.5.c - test de la méthode updateStudentById avec un utilisateur non existant
+    // UT-US-UPD-03 - test de la méthode updateStudentById avec un utilisateur non existant
     /* Vérifie que updateStudentById rejette un utilisateur non existant.
      * Entrants : findById -> Optional.empty
      * Sortants : une exception IllegalArgumentException ("User with id XXX does not exist").
      */
     @Test
-    public void test_update_student_by_id_with_non_existing_user_throws_IllegalArgumentException() {
+    public void UtUsUpd03_UpdateStudentById_ThrowsIllegalArgumentException_ForMissingId() {
         // GIVEN
         Long id = 1L;
         UpdateStudentDTO dto = new UpdateStudentDTO();
@@ -404,14 +404,14 @@ public class UserServiceTest {
             .hasMessage("User with id " + id + " does not exist");
     }
 
-    // 1.6.a - test de la méthode deleteStudentById avec un utilisateur valide
+    // UT-US-DEL-01 - test de la méthode deleteStudentById avec un utilisateur valide
     /* Vérifie que deleteStudentById supprime un utilisateur existant.
      * Entrants : existsById -> true
      * Sortants : existsById a été appelé avec l'id de l'utilisateur
      *            deleteById a été appelé avec l'id de l'utilisateur
      */
     @Test
-    public void test_delete_student_by_id() {
+    public void UtUsDel01_DeleteStudentById_DeletesStudent_ForExistingId() {
         // GIVEN
         Long id = 1L;
         when(userRepository.existsById(id)).thenReturn(true);
@@ -424,13 +424,13 @@ public class UserServiceTest {
         verify(userRepository).deleteById(id);
     }
 
-    // 1.6.b - test de la méthode deleteStudentById avec un utilisateur non existant
+    // UT-US-DEL-02 - test de la méthode deleteStudentById avec un utilisateur non existant
     /* Vérifie que deleteStudentById rejette un utilisateur non existant.
      * Entrants : existsById -> false
      * Sortants : une exception IllegalArgumentException ("User with id XXX does not exist").
      */
     @Test
-    public void test_delete_student_by_id_with_non_existing_user_throws_IllegalArgumentException() {
+    public void UtUsDel02_DeleteStudentById_ThrowsIllegalArgumentException_ForMissingId() {
         // GIVEN
         Long id = 1L;
         when(userRepository.existsById(id)).thenReturn(false);
