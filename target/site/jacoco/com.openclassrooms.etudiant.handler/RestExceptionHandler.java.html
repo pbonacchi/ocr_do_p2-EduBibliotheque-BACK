@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="fr"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RestExceptionHandler.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">etudiant-backend</a> &gt; <a href="index.source.html" class="el_package">com.openclassrooms.etudiant.handler</a> &gt; <span class="el_source">RestExceptionHandler.java</span></div><h1>RestExceptionHandler.java</h1><pre class="source lang-java linenums">package com.openclassrooms.etudiant.handler;
+
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.lang.NonNull;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+
+import java.nio.file.AccessDeniedException;
+import java.time.LocalDateTime;
+
+@RestControllerAdvice
+<span class="fc" id="L21">public class RestExceptionHandler extends ResponseEntityExceptionHandler {</span>
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(value = {IllegalArgumentException.class, IllegalStateException.class})
+    protected ResponseEntity&lt;Object&gt; handleConflict(RuntimeException runtimeException, WebRequest request) {
+<span class="fc" id="L26">        logError(runtimeException);</span>
+<span class="fc" id="L27">        return handleExceptionInternal(runtimeException, getErrorDetails(runtimeException, request), new HttpHeaders(),</span>
+<span class="fc" id="L28">                HttpStatus.BAD_REQUEST, request);</span>
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @Override
+    protected ResponseEntity&lt;Object&gt; handleMethodArgumentNotValid(@NonNull MethodArgumentNotValidException ex, @NonNull HttpHeaders headers,
+                                                                   @NonNull HttpStatusCode status, @NonNull WebRequest request) {
+<span class="fc" id="L35">        String message = ex.getBindingResult().getAllErrors().stream()</span>
+<span class="fc" id="L36">                .map(error -&gt; error.getDefaultMessage())</span>
+<span class="fc" id="L37">                .findFirst()</span>
+<span class="fc" id="L38">                .orElse(&quot;Validation failed&quot;);</span>
+<span class="fc" id="L39">        logError(ex);</span>
+<span class="fc" id="L40">        ErrorDetails errorDetails = new ErrorDetails(LocalDateTime.now(), message, request.getDescription(false));</span>
+<span class="fc" id="L41">        return handleExceptionInternal(ex, errorDetails, new HttpHeaders(), HttpStatus.BAD_REQUEST, request);</span>
+        //return new ResponseEntity&lt;&gt;(errorDetails, HttpStatus.BAD_REQUEST);
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @Override
+    protected ResponseEntity&lt;Object&gt; handleHttpMessageNotReadable(@NonNull HttpMessageNotReadableException ex, @NonNull HttpHeaders headers,
+                                                                   @NonNull HttpStatusCode status, @NonNull WebRequest request) {
+<span class="nc" id="L49">        String message = &quot;Malformed JSON request or invalid field types&quot;;</span>
+<span class="nc" id="L50">        logError(ex);</span>
+<span class="nc" id="L51">        ErrorDetails errorDetails = new ErrorDetails(LocalDateTime.now(), message, request.getDescription(false));</span>
+<span class="nc" id="L52">        return handleExceptionInternal(ex, errorDetails, new HttpHeaders(), HttpStatus.BAD_REQUEST, request);</span>
+        //return new ResponseEntity&lt;&gt;(errorDetails, HttpStatus.BAD_REQUEST);
+    }
+
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    @ExceptionHandler(value = {BadCredentialsException.class})
+    protected ResponseEntity&lt;Object&gt; handleBadCredentialsException(BadCredentialsException badCredentialsException,
+                                                                   WebRequest request) {
+<span class="nc" id="L60">        logError(badCredentialsException);</span>
+<span class="nc" id="L61">        return handleExceptionInternal(badCredentialsException, getErrorDetails(badCredentialsException, request),</span>
+<span class="nc" id="L62">                new HttpHeaders(), HttpStatus.UNAUTHORIZED, request);</span>
+    }
+
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    @ExceptionHandler(value = {AccessDeniedException.class})
+    protected ResponseEntity&lt;Object&gt; handleForbiddenException(AccessDeniedException accessDeniedException,
+                                                              WebRequest request) {
+<span class="nc" id="L69">        logError(accessDeniedException);</span>
+<span class="nc" id="L70">        return handleExceptionInternal(accessDeniedException, getErrorDetails(accessDeniedException, request),</span>
+<span class="nc" id="L71">                new HttpHeaders(), HttpStatus.FORBIDDEN, request);</span>
+    }
+
+
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ExceptionHandler(value = {Exception.class})
+    protected ResponseEntity&lt;Object&gt; handleException(RuntimeException runtimeException, WebRequest request) {
+<span class="nc" id="L78">        logError(runtimeException);</span>
+<span class="nc" id="L79">        return handleExceptionInternal(runtimeException, &quot;Internal Server error&quot;, new HttpHeaders(),</span>
+<span class="nc" id="L80">                HttpStatus.INTERNAL_SERVER_ERROR, request);</span>
+    }
+
+    private void logError(Exception exception) {
+<span class="fc" id="L84">        logger.error(exception.getMessage(), exception);</span>
+<span class="fc" id="L85">    }</span>
+
+    private ErrorDetails getErrorDetails(Exception exception, WebRequest request) {
+<span class="fc" id="L88">        return new ErrorDetails(LocalDateTime.now(), exception.getMessage(), request.getDescription(false));</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,5 +1,11 @@
 HELP.md
 target/
+!target/
+target/*
+!target/site/
+target/site/*
+!target/site/jacoco/
+!target/site/jacoco/**
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
