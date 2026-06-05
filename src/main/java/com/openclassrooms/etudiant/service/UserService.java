@@ -5,6 +5,7 @@ import com.openclassrooms.etudiant.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,9 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+
+    @Value("${DEFAULT_PASSWORD}")
+    private String defaultPassword;
 
     public String login(String login, String password) {
         Assert.notNull(login, "Login must not be null");
@@ -60,7 +64,7 @@ public class UserService {
         if (optionalUser.isPresent()) {
             throw new IllegalArgumentException("User with login " + user.getLogin() + " already exists");
         }
-        user.setPassword(passwordEncoder.encode(System.getenv("DEFAULT_PASSWORD")));
+        user.setPassword(passwordEncoder.encode(defaultPassword));
         return userRepository.save(user);
     }
 

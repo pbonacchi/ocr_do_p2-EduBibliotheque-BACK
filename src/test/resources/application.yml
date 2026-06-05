@@ -11,3 +11,6 @@ spring:
 jwt:
   secret: test-secret-minimum-256-bits-pour-hs256-encoding-requirement
   expiration: 3600000
+
+# Mot de passe par défaut assigné aux étudiants créés par un admin (createStudent)
+DEFAULT_PASSWORD: test-default-password

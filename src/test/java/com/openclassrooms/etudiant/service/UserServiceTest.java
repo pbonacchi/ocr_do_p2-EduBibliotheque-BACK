@@ -5,6 +5,7 @@ import com.openclassrooms.etudiant.repository.UserRepository;
 import com.openclassrooms.testutils.UserTestBuilder;
 
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -13,6 +14,7 @@ import org.mockito.Mock;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -33,6 +35,7 @@ public class UserServiceTest {
     private static final String LAST_NAME = "Doe";
     private static final String LOGIN = "LOGIN";
     private static final String PASSWORD = "PASSWORD";
+    private static final String DEFAULT_PASSWORD = "test-default-password";
     @Mock
     private UserRepository userRepository;
     @Mock
@@ -43,6 +46,11 @@ public class UserServiceTest {
     private JwtService jwtService;
     @InjectMocks
     private UserService userService;
+
+    @BeforeEach
+    void injectDefaultPassword() {
+        ReflectionTestUtils.setField(userService, "defaultPassword", DEFAULT_PASSWORD);
+    }
 
     // UT-US-REG-01 - test de la méthode register avec un utilisateur valide
     /* Vérifie que register enregistre un utilisateur valide.
@@ -222,17 +230,16 @@ public class UserServiceTest {
             .withLogin(LOGIN)
             .withNoPassword()
             .build();
-        String defaultPassword = System.getenv("DEFAULT_PASSWORD");
         String encodedPassword = "encoded-password";
         when(userRepository.findByLogin(LOGIN)).thenReturn(Optional.empty());
-        when(passwordEncoder.encode(defaultPassword)).thenReturn(encodedPassword);
+        when(passwordEncoder.encode(DEFAULT_PASSWORD)).thenReturn(encodedPassword);
 
         // WHEN
         userService.createStudent(user);
 
         // THEN
         verify(userRepository).findByLogin(LOGIN);
-        verify(passwordEncoder).encode(defaultPassword);
+        verify(passwordEncoder).encode(DEFAULT_PASSWORD);
         assertThat(user.getPassword()).isEqualTo(encodedPassword);
         verify(userRepository).save(user);
     }
